@@ -6,18 +6,25 @@ use Illuminate\Console\Command;
 use App\Models\XmlFeed;
 use App\Models\Product;
 use App\Models\Category;
+use App\Models\ShopProfile;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class ImportXmlFeeds extends Command
 {
-    protected $signature = 'import:xml-feeds';
+    protected $signature = 'import:xml-feeds {feed_id?}';
     protected $description = 'Import products from XML feeds';
 
     public function handle()
     {
-        $feeds = XmlFeed::where('is_active', true)->get();
+        $feedId = $this->argument('feed_id');
+        
+        if ($feedId) {
+            $feeds = XmlFeed::where('id', $feedId)->where('is_active', true)->get();
+        } else {
+            $feeds = XmlFeed::where('is_active', true)->get();
+        }
         
         $this->info("Found {$feeds->count()} active XML feeds to process.");
         
@@ -32,6 +39,10 @@ class ImportXmlFeeds extends Command
                     
                     $successCount = 0;
                     $errorCount = 0;
+                    $totalItems = count($xml->item);
+                    
+                    $this->info("Found {$totalItems} items in feed.");
+                    $progressBar = $this->output->createProgressBar($totalItems);
                     
                     foreach ($xml->item as $item) {
                         try {
@@ -88,7 +99,12 @@ class ImportXmlFeeds extends Command
                             $errorCount++;
                             Log::error("Error processing product: " . $e->getMessage());
                         }
+                        
+                        $progressBar->advance();
                     }
+                    
+                    $progressBar->finish();
+                    $this->newLine(2);
                     
                     // Update feed stats
                     $feed->last_processed = now();

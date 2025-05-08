@@ -44,6 +44,10 @@ Route::middleware(['auth', 'user.type:user'])->prefix('user')->group(function ()
     Route::post('/profile/email', [UserProfileController::class, 'updateEmail'])->name('user.profile.email.update');
     Route::post('/profile/password', [UserProfileController::class, 'updatePassword'])->name('user.profile.password.update');
     Route::post('/profile/bugs', [UserProfileController::class, 'reportBug'])->name('user.profile.bugs.submit');
+
+    Route::post('/products/{product}/reviews', [App\Http\Controllers\ReviewController::class, 'store'])->name('products.reviews.store');
+    Route::put('/products/reviews/{review}', [App\Http\Controllers\ReviewController::class, 'update'])->name('products.reviews.update');
+    Route::delete('/products/reviews/{review}', [App\Http\Controllers\ReviewController::class, 'destroy'])->name('products.reviews.destroy');
 });
 
 // Authenticated shop routes
